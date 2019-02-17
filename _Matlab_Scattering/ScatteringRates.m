@@ -54,7 +54,7 @@ ScattIntervalleyEmi(1:nE,1:length(Div)) = 0;
 ScattIntervalleyTot(1:nE,1:length(Div)) = 0;
 
 GammaE(1:nE)=0;
-GammaMIon(1:nE,m)=0;
+GammaMIon(1:nE,1:length(Div))=0;
 GammaMPop(1:nE)=0;
 GammaEPop(1:nE)=0;
 
@@ -208,10 +208,10 @@ ylabel('\Gamma (s^{-1})')
 hold off
 
 figure(5)
+semilogy(E,ScattPolarOpAbs,'Linewidth', 3)
 hold on
-plot(E,ScattPolarOpAbs,'Linewidth', 3)
-plot(E,ScattPolarOpEmi,'Linewidth', 3)
-plot(E,ScattPolarOpTot,'Linewidth', 3)
+semilogy(E,ScattPolarOpEmi,'Linewidth', 3)
+semilogy(E,ScattPolarOpTot,'Linewidth', 3)
 title('Polar Optical Phonon Scattering')
 legend('Abs','Emi','Tot')
 xlabel('E (eV)')
@@ -289,9 +289,9 @@ ylabel('\Gamma (s^-^1)')
 hold off
 
 figure(13)
+semilogy(E,GammaMIon(:,1),'Linewidth', 3)
 hold on
-plot(E,GammaMIon(:,1),'Linewidth', 3)
-plot(E,GammaMIon(:,2),'Linewidth', 3)
+semilogy(E,GammaMIon(:,2),'Linewidth', 3)
 title('Ion Impurity Scattering Relaxation Rate')
 legend('\Gamma_{Tot}=\Gamma_M N_I=10^{17} cm^{-3}','\Gamma_{Tot}=\Gamma_M N_I=10^{19} cm^{-3}')
 xlabel('E (eV)')
@@ -299,10 +299,9 @@ ylabel('\Gamma (s^-^1)')
 hold off
 
 figure(14)
-hold on
 semilogy(E,GammaMPop,'Linewidth', 3)
+hold on
 semilogy(E,GammaEPop,'Linewidth', 3)
-semilogy(E,GammaEPop+GammaMPop,'Linewidth', 3)
 title('Polar Optical Phonon Relaxation Rate')
 legend('\Gamma_M','\Gamma_E','\Gamma_{Tot}')
 xlabel('E (eV)')

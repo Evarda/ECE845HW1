@@ -1,0 +1,718 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>ScatteringRates</title><meta name="generator" content="MATLAB 9.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-02-14"><meta name="DC.source" content="ScatteringRates.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput">close <span class="string">all</span>;
+clc;
+
+<span class="comment">% Constants</span>
+hbar=6.582119*10^-16; <span class="comment">%[eV*s]</span>
+hbarJ=1.0545718*10^-34; <span class="comment">%[J*s]</span>
+kb=8.6173303*10^-5; <span class="comment">%[eV/K]</span>
+kbJ=1.38064852*10^-23; <span class="comment">%[J/K]</span>
+T=300; <span class="comment">%[K]</span>
+ep0=8.854187817*10^-12; <span class="comment">%[F/m]</span>
+e=1.6021766208*10^-19; <span class="comment">%[C]</span>
+m0=9.10938356*10^-31; <span class="comment">%[kg]</span>
+
+Ec=0;
+
+<span class="comment">% GaAs</span>
+effm = [0.067 0.22 0.58]*m0; <span class="comment">%[kg] for gamma, L, X respectively</span>
+rho = 5.36/1000*(100^3); <span class="comment">%[kg/m^3]</span>
+vs = 5.24*10^5/100; <span class="comment">%[m/s]</span>
+epr0 = 12.90;
+eprInf = 10.92;
+
+nE=500;
+E=linspace(0,2,nE);
+
+<span class="comment">% Acoustic Phonon Scattering</span>
+Dac = [7.01 9.2 9.0]; <span class="comment">%[eV] for gamma, L, X respectively</span>
+
+ScattAcousticAbs(1:nE,1:length(Dac))=0;
+ScattAcousticEmi(1:nE,1:length(Dac))=0;
+ScattAcousticTot(1:nE,1:length(Dac))=0;
+
+<span class="comment">% Polar Optical Phonon Scattering</span>
+E0 = 0.03536; <span class="comment">%[eV]</span>
+w0 = E0/hbar; <span class="comment">% [1/s]</span>
+N0=(exp(E0/(kb*T))-1)^(-1);
+
+ScattPolarOpAbs(1:nE)=0;
+ScattPolarOpEmi(1:nE)=0;
+ScattPolarOpTot(1:nE)=0;
+
+<span class="comment">% Intervalley Scattering</span>
+Div = [10 10 10 5.0 7.0]*10^8*100; <span class="comment">% [eV/m]</span>
+Ein = [0.0278 0.0299 0.0290 0.0293 0.0299]; <span class="comment">% [eV]</span>
+deltaE = [ 0.29  0.48  0  0.19  0; <span class="keyword">...</span>
+          -0.29 -0.48 -0 -0.19 -0]; <span class="comment">% [eV]</span>
+effmIV = [effm(2) effm(3) effm(2) effm(3) effm(3); <span class="keyword">...</span>
+          effm(1) effm(1) effm(2) effm(2) effm(3)];
+ValleyN = [4 3 4 3 3; <span class="keyword">...</span>
+           1 1 4 4 3];
+
+ScattIntervalleyAbs(1:nE,1:length(Div)) = 0;
+ScattIntervalleyEmi(1:nE,1:length(Div)) = 0;
+ScattIntervalleyTot(1:nE,1:length(Div)) = 0;
+
+GammaE(1:nE)=0;
+GammaMIon(1:nE,1:length(Div))=0;
+GammaMPop(1:nE)=0;
+GammaEPop(1:nE)=0;
+
+<span class="comment">% Ionized Impurity Scattering</span>
+NI = [10^17 10^19]*(100^3); <span class="comment">% [1/m^3]</span>
+Z = 1;
+
+k(1:nE) = 0;
+ScattIonImpurity(1:nE,length(NI)) = 0;
+
+
+<span class="comment">% Calculation Loop</span>
+
+<span class="keyword">for</span> i=1:nE
+
+<span class="keyword">for</span> m=1:length(effm)
+
+<span class="comment">% Density of States</span>
+g3dAcoustic = sqrt(2)/(pi^2*hbar^3)*effm(m)^(3/2)*sqrt(E(i)-Ec);
+
+<span class="comment">% Acoustic Phonon Scattering</span>
+ScattAcousticAbs(i,m) = 2*pi/(hbarJ*hbar)^(1/2)*Dac(m)^2*kb*T/(2*rho*vs^2)*g3dAcoustic;
+ScattAcousticEmi(i,m) = 2*pi/(hbarJ*hbar)^(1/2)*Dac(m)^2*kb*T/(2*rho*vs^2)*g3dAcoustic;
+ScattAcousticTot(i,m) = ScattAcousticAbs(i,m) + ScattAcousticEmi(i,m);
+<span class="keyword">end</span>
+
+
+<span class="comment">% Polar Optical Phonon Scattering</span>
+PopFactor=sqrt(hbar/hbarJ)*e^2*w0/(8*pi)*sqrt(2*effm(1)/hbarJ^2)*(1/(ep0*eprInf)-1/(ep0*epr0))*1/sqrt(E(i));
+
+ScattPolarOpAbs(i) = PopFactor*N0*log(abs((1+sqrt(1+E0/E(i)))/(-1+sqrt(1+E0/E(i)))));
+ScattPolarOpEmi(i) = PopFactor*(N0+1)*log(abs((1+sqrt(1-E0/E(i)))/(1-sqrt(1-E0/E(i)))))*heaviside(E(i)-E0);
+ScattPolarOpTot(i) = ScattPolarOpAbs(i) + ScattPolarOpEmi(i);
+
+<span class="keyword">for</span> n=1:2
+<span class="keyword">for</span> m=1:length(Div)
+
+<span class="comment">% Bose-Einstein Distribution</span>
+Niv=(exp(Ein(m)/(kb*T))-1)^(-1);
+
+<span class="comment">% Density of States</span>
+g3dIntervalleyAbs = sqrt(2)/(pi^2*hbar^2*(hbarJ*hbar)^(1/2))*effmIV(n,m)^(3/2)*sqrt(E(i)-deltaE(n,m)+Ein(m));
+g3dIntervalleyEmi = sqrt(2)/(pi^2*hbar^2*(hbarJ*hbar)^(1/2))*effmIV(n,m)^(3/2)*sqrt(E(i)-deltaE(n,m)-Ein(m));
+
+<span class="comment">% Intervalley Scattering (TA, LA, LO)</span>
+ScattIntervalleyAbs(i,n,m) = pi*Div(m)^2/(2*rho*Ein(m)/hbar)*ValleyN(n,m)*Niv*g3dIntervalleyAbs;
+ScattIntervalleyEmi(i,n,m) = pi*Div(m)^2/(2*rho*Ein(m)/hbar)*ValleyN(n,m)*(Niv+1)*g3dIntervalleyEmi;
+ScattIntervalleyTot(i,n,m) = ScattIntervalleyAbs(i,n,m)+ScattIntervalleyEmi(i,n,m);
+
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="keyword">for</span> m=1:length(NI)
+<span class="comment">% Ionized Impurity Scattering</span>
+Ld=sqrt(ep0*epr0*kbJ*T/(e^2*NI(m))); <span class="comment">%[m]</span>
+k(i)= sqrt(2*effm(1)*E(i)/(hbar*hbarJ));
+ScattIonImpurity(i,m) = (NI(m)*Z^2*e^4*effm(1)*Ld^4)/(hbarJ^3*pi*ep0^2*epr0^2)*(k(i)/(4*k(i)^2*Ld^2+1));
+
+gamma=sqrt(8*effm(1)*E(i)*Ld^2/(hbar*hbarJ));
+GammaMIon(i,m)=(hbar/hbarJ)^(3/2)*(NI(m)*e^4)/(16*sqrt(2*effm(1))*pi*epr0^2*ep0^2)*(log(1+gamma^2)-gamma^2/(1+gamma^2))*E(i)^(-3/2);
+<span class="keyword">end</span>
+
+
+
+<span class="comment">% Relaxation Rates</span>
+
+
+GammaMPop(i)=(e^2*w0*(epr0/eprInf-1))/(4*pi*epr0*ep0*sqrt(hbarJ/hbar)*hbarJ*sqrt(2*E(i)/effm(1)))* <span class="keyword">...</span>
+    (N0*sqrt(1+E0/E(i))+(N0+1)*sqrt(1-E0/E(i))-E0*N0/E(i)*asinh(sqrt(E(i)/E0))+E0*(N0+1)/E(i)*asinh(sqrt(E(i)/E0-1)));
+GammaEPop(i)=(hbar/hbarJ)^(3/2)*(e^2*w0^2*(epr0/eprInf-1))/(2*pi*epr0*ep0)*(N0+1)*asinh(sqrt(E(i)/E0-1))/(E(i)*(sqrt(2*E(i)/effm(1))));
+
+
+<span class="keyword">end</span>
+
+
+figure(1)
+hold <span class="string">on</span>
+plot(E,ScattAcousticAbs(:,1),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [1 0 0])
+plot(E,ScattAcousticEmi(:,1), <span class="string">'--'</span>,<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.75 0 0])
+plot(E,ScattAcousticTot(:,1),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.5 0 0])
+
+plot(E,ScattAcousticAbs(:,2),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 1 1])
+plot(E,ScattAcousticEmi(:,2), <span class="string">'--'</span>,<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.75 0.75])
+plot(E,ScattAcousticTot(:,2),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.5 0.5])
+
+plot(E,ScattAcousticAbs(:,3),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0 1])
+plot(E,ScattAcousticEmi(:,3), <span class="string">'--'</span>,<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0 0.75])
+plot(E,ScattAcousticTot(:,3),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0 0.5])
+title(<span class="string">'Acoustic Phonon Scattering'</span>)
+legend(<span class="string">'\Gamma (Abs)'</span>,<span class="string">'\Gamma (Emi)'</span>,<span class="string">'\Gamma (Tot)'</span>, <span class="keyword">...</span>
+       <span class="string">'L (Abs)'</span>,<span class="string">'L (Emi)'</span>,<span class="string">'L (Tot)'</span>, <span class="keyword">...</span>
+       <span class="string">'X (Abs)'</span>,<span class="string">'X (Emi)'</span>,<span class="string">'X (Tot)'</span>)
+xlabel(<span class="string">'E (eV)'</span>)
+ylabel(<span class="string">'\Gamma (s^-^1)'</span>)
+hold <span class="string">off</span>
+
+figure(2)
+hold <span class="string">on</span>
+plot(E,ScattIntervalleyAbs(:,1,1),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.75 0 0])
+plot(E,ScattIntervalleyAbs(:,1,2),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.75 0.5 0])
+plot(E,ScattIntervalleyAbs(:,1,3),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.75 0])
+plot(E,ScattIntervalleyAbs(:,1,4),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.75 0.75])
+plot(E,ScattIntervalleyAbs(:,1,5),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0 0.75])
+plot(E,ScattIntervalleyAbs(:,2,1),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.5 0 0])
+plot(E,ScattIntervalleyAbs(:,2,2),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.5 0.5 0])
+plot(E,ScattIntervalleyAbs(:,2,3),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.5 0])
+plot(E,ScattIntervalleyAbs(:,2,4),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.5 0.5])
+plot(E,ScattIntervalleyAbs(:,2,5),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0 0.5])
+title(<span class="string">'Intervalley Scattering (Absorption)'</span>)
+legend(<span class="string">'\Gamma L (Abs)'</span>,<span class="string">'\Gamma X (Abs)'</span>,<span class="string">'L L (Abs)'</span>,<span class="string">'L X (Abs)'</span>,<span class="string">'X X (Abs)'</span>)
+xlabel(<span class="string">'E (eV)'</span>)
+ylabel(<span class="string">'\Gamma (s^{-1})'</span>)
+hold <span class="string">off</span>
+
+figure(3)
+hold <span class="string">on</span>
+plot(E,ScattIntervalleyEmi(:,1,1),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.75 0 0])
+plot(E,ScattIntervalleyEmi(:,1,2),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.75 0.5 0])
+plot(E,ScattIntervalleyEmi(:,1,3),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.75 0])
+plot(E,ScattIntervalleyEmi(:,1,4),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.75 0.75])
+plot(E,ScattIntervalleyEmi(:,1,5),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0 0.75])
+plot(E,ScattIntervalleyEmi(:,2,1),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.5 0 0])
+plot(E,ScattIntervalleyEmi(:,2,2),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.5 0.5 0])
+plot(E,ScattIntervalleyEmi(:,2,3),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.5 0])
+plot(E,ScattIntervalleyEmi(:,2,4),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.5 0.5])
+plot(E,ScattIntervalleyEmi(:,2,5),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0 0.5])
+title(<span class="string">'Intervalley Scattering (Emission)'</span>)
+legend(<span class="string">'\Gamma L (Emi)'</span>,<span class="string">'\Gamma X (Emi)'</span>,<span class="string">'L L (Emi)'</span>,<span class="string">'L X (Emi)'</span>,<span class="string">'X X (Emi)'</span>, <span class="keyword">...</span>
+       <span class="string">'L \Gamma (Emi)'</span>,<span class="string">'X \Gamma (Emi)'</span>,<span class="string">'L L (Emi)'</span>,<span class="string">'X L (Emi)'</span>,<span class="string">'X X (Emi)'</span>)
+xlabel(<span class="string">'E (eV)'</span>)
+ylabel(<span class="string">'\Gamma (s^{-1})'</span>)
+hold <span class="string">off</span>
+
+figure(4)
+hold <span class="string">on</span>
+plot(E,ScattIntervalleyTot(:,1,1),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.75 0 0])
+plot(E,ScattIntervalleyTot(:,1,2),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.75 0.75 0])
+plot(E,ScattIntervalleyTot(:,1,3),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.75 0])
+plot(E,ScattIntervalleyTot(:,1,4),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.75 0.75])
+plot(E,ScattIntervalleyTot(:,1,5),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0 0.75])
+plot(E,ScattIntervalleyTot(:,2,1),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.5 0 0])
+plot(E,ScattIntervalleyTot(:,2,2),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.5 0.5 0])
+plot(E,ScattIntervalleyTot(:,2,3),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.5 0])
+plot(E,ScattIntervalleyTot(:,2,4),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.5 0.5])
+plot(E,ScattIntervalleyTot(:,2,5),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0 0.5])
+title(<span class="string">'Intervalley Scattering (Total)'</span>)
+legend(<span class="string">'\Gamma L'</span>,<span class="string">'\Gamma X'</span>,<span class="string">'L L'</span>,<span class="string">'L X'</span>,<span class="string">'X X'</span>, <span class="keyword">...</span>
+       <span class="string">'L \Gamma'</span>,<span class="string">'X \Gamma'</span>,<span class="string">'L L'</span>,<span class="string">'X L'</span>,<span class="string">'X X'</span>)
+xlabel(<span class="string">'E (eV)'</span>)
+ylabel(<span class="string">'\Gamma (s^{-1})'</span>)
+hold <span class="string">off</span>
+
+figure(5)
+hold <span class="string">on</span>
+plot(E,ScattPolarOpAbs,<span class="string">'Linewidth'</span>, 3)
+plot(E,ScattPolarOpEmi,<span class="string">'Linewidth'</span>, 3)
+plot(E,ScattPolarOpTot,<span class="string">'Linewidth'</span>, 3)
+title(<span class="string">'Polar Optical Phonon Scattering'</span>)
+legend(<span class="string">'Abs'</span>,<span class="string">'Emi'</span>,<span class="string">'Tot'</span>)
+xlabel(<span class="string">'E (eV)'</span>)
+ylabel(<span class="string">'\Gamma (s^-^1)'</span>)
+hold <span class="string">off</span>
+
+figure(6)
+hold <span class="string">on</span>
+plot(E,ScattIntervalleyTot(:,1,1),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.75 0 0])
+plot(E,ScattIntervalleyTot(:,2,1),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.75 0])
+title(<span class="string">'Intervalley Scattering (Total)'</span>)
+legend(<span class="string">'\Gamma L'</span>, <span class="string">'L \Gamma'</span>)
+xlabel(<span class="string">'E (eV)'</span>)
+ylabel(<span class="string">'\Gamma (s^{-1})'</span>)
+hold <span class="string">off</span>
+
+figure(7)
+hold <span class="string">on</span>
+plot(E,ScattIntervalleyTot(:,1,2),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.75 0 0])
+plot(E,ScattIntervalleyTot(:,2,2),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.75 0])
+title(<span class="string">'Intervalley Scattering (Total)'</span>)
+legend(<span class="string">'\Gamma X'</span>, <span class="string">'X \Gamma'</span>)
+xlabel(<span class="string">'E (eV)'</span>)
+ylabel(<span class="string">'\Gamma (s^{-1})'</span>)
+hold <span class="string">off</span>
+
+figure(8)
+hold <span class="string">on</span>
+plot(E,ScattIntervalleyTot(:,1,3),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.75 0 0])
+plot(E,ScattIntervalleyTot(:,2,3),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.75 0])
+title(<span class="string">'Intervalley Scattering (Total)'</span>)
+legend(<span class="string">'L L'</span>, <span class="string">'L L'</span>)
+xlabel(<span class="string">'E (eV)'</span>)
+ylabel(<span class="string">'\Gamma (s^{-1})'</span>)
+hold <span class="string">off</span>
+
+figure(9)
+hold <span class="string">on</span>
+plot(E,ScattIntervalleyTot(:,1,4),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.75 0 0])
+plot(E,ScattIntervalleyTot(:,2,4),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.75 0])
+title(<span class="string">'Intervalley Scattering (Total)'</span>)
+legend(<span class="string">'L X'</span>, <span class="string">'X L'</span>)
+xlabel(<span class="string">'E (eV)'</span>)
+ylabel(<span class="string">'\Gamma (s^{-1})'</span>)
+hold <span class="string">off</span>
+
+figure(10)
+hold <span class="string">on</span>
+plot(E,ScattIntervalleyTot(:,1,5),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0.75 0 0])
+plot(E,ScattIntervalleyTot(:,2,5),<span class="string">'Linewidth'</span>, 3,<span class="string">'Color'</span>, [0 0.75 0])
+title(<span class="string">'Intervalley Scattering (Total)'</span>)
+legend(<span class="string">'X X'</span>, <span class="string">'X X'</span>)
+xlabel(<span class="string">'E (eV)'</span>)
+ylabel(<span class="string">'\Gamma (s^{-1})'</span>)
+hold <span class="string">off</span>
+
+figure(11)
+hold <span class="string">on</span>
+plot(E,ScattIonImpurity(:,1),<span class="string">'Linewidth'</span>, 3)
+plot(E,ScattIonImpurity(:,2),<span class="string">'Linewidth'</span>, 3)
+title(<span class="string">'Ionized Impurity Scattering'</span>)
+legend(<span class="string">'N_I=10^{17} cm^{-3}'</span>,<span class="string">'N_I=10^{19} cm^{-3}'</span>)
+xlabel(<span class="string">'E (eV)'</span>)
+ylabel(<span class="string">'\Gamma (s^-^1)'</span>)
+hold <span class="string">off</span>
+
+figure(12)
+hold <span class="string">on</span>
+plot(E,ScattIonImpurity(:,1),<span class="string">'Linewidth'</span>, 3)
+plot(E,ScattIonImpurity(:,2),<span class="string">'Linewidth'</span>, 3)
+title(<span class="string">'Ionized Impurity Scattering'</span>)
+legend(<span class="string">'N_I=10^{17} cm^{-3}'</span>,<span class="string">'N_I=10^{19} cm^{-3}'</span>)
+xlabel(<span class="string">'E (eV)'</span>)
+ylabel(<span class="string">'\Gamma (s^-^1)'</span>)
+hold <span class="string">off</span>
+
+figure(13)
+semilogy(E,GammaMIon(:,1),<span class="string">'Linewidth'</span>, 3)
+hold <span class="string">on</span>
+semilogy(E,GammaMIon(:,2),<span class="string">'Linewidth'</span>, 3)
+title(<span class="string">'Ion Impurity Scattering Relaxation Rate'</span>)
+legend(<span class="string">'\Gamma_{Tot}=\Gamma_M N_I=10^{17} cm^{-3}'</span>,<span class="string">'\Gamma_{Tot}=\Gamma_M N_I=10^{19} cm^{-3}'</span>)
+xlabel(<span class="string">'E (eV)'</span>)
+ylabel(<span class="string">'\Gamma (s^-^1)'</span>)
+hold <span class="string">off</span>
+
+figure(14)
+hold <span class="string">on</span>
+semilogy(E,GammaMPop,<span class="string">'Linewidth'</span>, 3)
+semilogy(E,GammaEPop,<span class="string">'Linewidth'</span>, 3)
+title(<span class="string">'Polar Optical Phonon Relaxation Rate'</span>)
+legend(<span class="string">'\Gamma_M'</span>,<span class="string">'\Gamma_E'</span>,<span class="string">'\Gamma_{Tot}'</span>)
+xlabel(<span class="string">'E (eV)'</span>)
+ylabel(<span class="string">'\Gamma (s^-^1)'</span>)
+hold <span class="string">off</span>
+</pre><pre class="codeoutput">Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Imaginary parts of complex X and/or Y arguments ignored 
+Warning: Ignoring extra legend entries. 
+</pre><img vspace="5" hspace="5" src="ScatteringRates_01.png" alt=""> <img vspace="5" hspace="5" src="ScatteringRates_02.png" alt=""> <img vspace="5" hspace="5" src="ScatteringRates_03.png" alt=""> <img vspace="5" hspace="5" src="ScatteringRates_04.png" alt=""> <img vspace="5" hspace="5" src="ScatteringRates_05.png" alt=""> <img vspace="5" hspace="5" src="ScatteringRates_06.png" alt=""> <img vspace="5" hspace="5" src="ScatteringRates_07.png" alt=""> <img vspace="5" hspace="5" src="ScatteringRates_08.png" alt=""> <img vspace="5" hspace="5" src="ScatteringRates_09.png" alt=""> <img vspace="5" hspace="5" src="ScatteringRates_10.png" alt=""> <img vspace="5" hspace="5" src="ScatteringRates_11.png" alt=""> <img vspace="5" hspace="5" src="ScatteringRates_12.png" alt=""> <img vspace="5" hspace="5" src="ScatteringRates_13.png" alt=""> <img vspace="5" hspace="5" src="ScatteringRates_14.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+close all;
+clc;
+
+% Constants
+hbar=6.582119*10^-16; %[eV*s]
+hbarJ=1.0545718*10^-34; %[J*s]
+kb=8.6173303*10^-5; %[eV/K]
+kbJ=1.38064852*10^-23; %[J/K]
+T=300; %[K]
+ep0=8.854187817*10^-12; %[F/m]
+e=1.6021766208*10^-19; %[C]
+m0=9.10938356*10^-31; %[kg]
+
+Ec=0;
+
+% GaAs
+effm = [0.067 0.22 0.58]*m0; %[kg] for gamma, L, X respectively
+rho = 5.36/1000*(100^3); %[kg/m^3]
+vs = 5.24*10^5/100; %[m/s]
+epr0 = 12.90;
+eprInf = 10.92;
+
+nE=500;
+E=linspace(0,2,nE);
+
+% Acoustic Phonon Scattering
+Dac = [7.01 9.2 9.0]; %[eV] for gamma, L, X respectively
+
+ScattAcousticAbs(1:nE,1:length(Dac))=0;
+ScattAcousticEmi(1:nE,1:length(Dac))=0;
+ScattAcousticTot(1:nE,1:length(Dac))=0;
+
+% Polar Optical Phonon Scattering
+E0 = 0.03536; %[eV]
+w0 = E0/hbar; % [1/s]
+N0=(exp(E0/(kb*T))-1)^(-1);
+
+ScattPolarOpAbs(1:nE)=0;
+ScattPolarOpEmi(1:nE)=0;
+ScattPolarOpTot(1:nE)=0;
+
+% Intervalley Scattering
+Div = [10 10 10 5.0 7.0]*10^8*100; % [eV/m]
+Ein = [0.0278 0.0299 0.0290 0.0293 0.0299]; % [eV]
+deltaE = [ 0.29  0.48  0  0.19  0; ...
+          -0.29 -0.48 -0 -0.19 -0]; % [eV]
+effmIV = [effm(2) effm(3) effm(2) effm(3) effm(3); ...
+          effm(1) effm(1) effm(2) effm(2) effm(3)];
+ValleyN = [4 3 4 3 3; ...
+           1 1 4 4 3];
+
+ScattIntervalleyAbs(1:nE,1:length(Div)) = 0;
+ScattIntervalleyEmi(1:nE,1:length(Div)) = 0;
+ScattIntervalleyTot(1:nE,1:length(Div)) = 0;
+
+GammaE(1:nE)=0;
+GammaMIon(1:nE,1:length(Div))=0;
+GammaMPop(1:nE)=0;
+GammaEPop(1:nE)=0;
+
+% Ionized Impurity Scattering
+NI = [10^17 10^19]*(100^3); % [1/m^3]
+Z = 1;
+
+k(1:nE) = 0;
+ScattIonImpurity(1:nE,length(NI)) = 0;
+
+
+% Calculation Loop
+
+for i=1:nE
+
+for m=1:length(effm)
+    
+% Density of States
+g3dAcoustic = sqrt(2)/(pi^2*hbar^3)*effm(m)^(3/2)*sqrt(E(i)-Ec);
+
+% Acoustic Phonon Scattering
+ScattAcousticAbs(i,m) = 2*pi/(hbarJ*hbar)^(1/2)*Dac(m)^2*kb*T/(2*rho*vs^2)*g3dAcoustic;
+ScattAcousticEmi(i,m) = 2*pi/(hbarJ*hbar)^(1/2)*Dac(m)^2*kb*T/(2*rho*vs^2)*g3dAcoustic;
+ScattAcousticTot(i,m) = ScattAcousticAbs(i,m) + ScattAcousticEmi(i,m);
+end
+
+
+% Polar Optical Phonon Scattering
+PopFactor=sqrt(hbar/hbarJ)*e^2*w0/(8*pi)*sqrt(2*effm(1)/hbarJ^2)*(1/(ep0*eprInf)-1/(ep0*epr0))*1/sqrt(E(i));
+
+ScattPolarOpAbs(i) = PopFactor*N0*log(abs((1+sqrt(1+E0/E(i)))/(-1+sqrt(1+E0/E(i)))));
+ScattPolarOpEmi(i) = PopFactor*(N0+1)*log(abs((1+sqrt(1-E0/E(i)))/(1-sqrt(1-E0/E(i)))))*heaviside(E(i)-E0);
+ScattPolarOpTot(i) = ScattPolarOpAbs(i) + ScattPolarOpEmi(i);
+
+for n=1:2
+for m=1:length(Div)
+    
+% Bose-Einstein Distribution
+Niv=(exp(Ein(m)/(kb*T))-1)^(-1);
+
+% Density of States
+g3dIntervalleyAbs = sqrt(2)/(pi^2*hbar^2*(hbarJ*hbar)^(1/2))*effmIV(n,m)^(3/2)*sqrt(E(i)-deltaE(n,m)+Ein(m));
+g3dIntervalleyEmi = sqrt(2)/(pi^2*hbar^2*(hbarJ*hbar)^(1/2))*effmIV(n,m)^(3/2)*sqrt(E(i)-deltaE(n,m)-Ein(m));
+
+% Intervalley Scattering (TA, LA, LO)
+ScattIntervalleyAbs(i,n,m) = pi*Div(m)^2/(2*rho*Ein(m)/hbar)*ValleyN(n,m)*Niv*g3dIntervalleyAbs;
+ScattIntervalleyEmi(i,n,m) = pi*Div(m)^2/(2*rho*Ein(m)/hbar)*ValleyN(n,m)*(Niv+1)*g3dIntervalleyEmi;
+ScattIntervalleyTot(i,n,m) = ScattIntervalleyAbs(i,n,m)+ScattIntervalleyEmi(i,n,m);
+
+end
+end
+
+for m=1:length(NI)
+% Ionized Impurity Scattering
+Ld=sqrt(ep0*epr0*kbJ*T/(e^2*NI(m))); %[m]
+k(i)= sqrt(2*effm(1)*E(i)/(hbar*hbarJ));
+ScattIonImpurity(i,m) = (NI(m)*Z^2*e^4*effm(1)*Ld^4)/(hbarJ^3*pi*ep0^2*epr0^2)*(k(i)/(4*k(i)^2*Ld^2+1));
+
+gamma=sqrt(8*effm(1)*E(i)*Ld^2/(hbar*hbarJ));
+GammaMIon(i,m)=(hbar/hbarJ)^(3/2)*(NI(m)*e^4)/(16*sqrt(2*effm(1))*pi*epr0^2*ep0^2)*(log(1+gamma^2)-gamma^2/(1+gamma^2))*E(i)^(-3/2);
+end
+
+
+
+% Relaxation Rates
+
+
+GammaMPop(i)=(e^2*w0*(epr0/eprInf-1))/(4*pi*epr0*ep0*sqrt(hbarJ/hbar)*hbarJ*sqrt(2*E(i)/effm(1)))* ...
+    (N0*sqrt(1+E0/E(i))+(N0+1)*sqrt(1-E0/E(i))-E0*N0/E(i)*asinh(sqrt(E(i)/E0))+E0*(N0+1)/E(i)*asinh(sqrt(E(i)/E0-1)));
+GammaEPop(i)=(hbar/hbarJ)^(3/2)*(e^2*w0^2*(epr0/eprInf-1))/(2*pi*epr0*ep0)*(N0+1)*asinh(sqrt(E(i)/E0-1))/(E(i)*(sqrt(2*E(i)/effm(1))));
+
+
+end
+
+
+figure(1)
+hold on
+plot(E,ScattAcousticAbs(:,1),'Linewidth', 3,'Color', [1 0 0])
+plot(E,ScattAcousticEmi(:,1), 'REPLACE_WITH_DASH_DASH','Linewidth', 3,'Color', [0.75 0 0])
+plot(E,ScattAcousticTot(:,1),'Linewidth', 3,'Color', [0.5 0 0])
+
+plot(E,ScattAcousticAbs(:,2),'Linewidth', 3,'Color', [0 1 1])
+plot(E,ScattAcousticEmi(:,2), 'REPLACE_WITH_DASH_DASH','Linewidth', 3,'Color', [0 0.75 0.75])
+plot(E,ScattAcousticTot(:,2),'Linewidth', 3,'Color', [0 0.5 0.5])
+
+plot(E,ScattAcousticAbs(:,3),'Linewidth', 3,'Color', [0 0 1])
+plot(E,ScattAcousticEmi(:,3), 'REPLACE_WITH_DASH_DASH','Linewidth', 3,'Color', [0 0 0.75])
+plot(E,ScattAcousticTot(:,3),'Linewidth', 3,'Color', [0 0 0.5])
+title('Acoustic Phonon Scattering')
+legend('\Gamma (Abs)','\Gamma (Emi)','\Gamma (Tot)', ...
+       'L (Abs)','L (Emi)','L (Tot)', ...
+       'X (Abs)','X (Emi)','X (Tot)')
+xlabel('E (eV)')
+ylabel('\Gamma (s^-^1)')
+hold off
+
+figure(2)
+hold on
+plot(E,ScattIntervalleyAbs(:,1,1),'Linewidth', 3,'Color', [0.75 0 0])
+plot(E,ScattIntervalleyAbs(:,1,2),'Linewidth', 3,'Color', [0.75 0.5 0])
+plot(E,ScattIntervalleyAbs(:,1,3),'Linewidth', 3,'Color', [0 0.75 0])
+plot(E,ScattIntervalleyAbs(:,1,4),'Linewidth', 3,'Color', [0 0.75 0.75])
+plot(E,ScattIntervalleyAbs(:,1,5),'Linewidth', 3,'Color', [0 0 0.75])
+plot(E,ScattIntervalleyAbs(:,2,1),'Linewidth', 3,'Color', [0.5 0 0])
+plot(E,ScattIntervalleyAbs(:,2,2),'Linewidth', 3,'Color', [0.5 0.5 0])
+plot(E,ScattIntervalleyAbs(:,2,3),'Linewidth', 3,'Color', [0 0.5 0])
+plot(E,ScattIntervalleyAbs(:,2,4),'Linewidth', 3,'Color', [0 0.5 0.5])
+plot(E,ScattIntervalleyAbs(:,2,5),'Linewidth', 3,'Color', [0 0 0.5])
+title('Intervalley Scattering (Absorption)')
+legend('\Gamma L (Abs)','\Gamma X (Abs)','L L (Abs)','L X (Abs)','X X (Abs)')
+xlabel('E (eV)')
+ylabel('\Gamma (s^{-1})')
+hold off
+
+figure(3)
+hold on
+plot(E,ScattIntervalleyEmi(:,1,1),'Linewidth', 3,'Color', [0.75 0 0])
+plot(E,ScattIntervalleyEmi(:,1,2),'Linewidth', 3,'Color', [0.75 0.5 0])
+plot(E,ScattIntervalleyEmi(:,1,3),'Linewidth', 3,'Color', [0 0.75 0])
+plot(E,ScattIntervalleyEmi(:,1,4),'Linewidth', 3,'Color', [0 0.75 0.75])
+plot(E,ScattIntervalleyEmi(:,1,5),'Linewidth', 3,'Color', [0 0 0.75])
+plot(E,ScattIntervalleyEmi(:,2,1),'Linewidth', 3,'Color', [0.5 0 0])
+plot(E,ScattIntervalleyEmi(:,2,2),'Linewidth', 3,'Color', [0.5 0.5 0])
+plot(E,ScattIntervalleyEmi(:,2,3),'Linewidth', 3,'Color', [0 0.5 0])
+plot(E,ScattIntervalleyEmi(:,2,4),'Linewidth', 3,'Color', [0 0.5 0.5])
+plot(E,ScattIntervalleyEmi(:,2,5),'Linewidth', 3,'Color', [0 0 0.5])
+title('Intervalley Scattering (Emission)')
+legend('\Gamma L (Emi)','\Gamma X (Emi)','L L (Emi)','L X (Emi)','X X (Emi)', ...
+       'L \Gamma (Emi)','X \Gamma (Emi)','L L (Emi)','X L (Emi)','X X (Emi)')
+xlabel('E (eV)')
+ylabel('\Gamma (s^{-1})')
+hold off
+
+figure(4)
+hold on
+plot(E,ScattIntervalleyTot(:,1,1),'Linewidth', 3,'Color', [0.75 0 0])
+plot(E,ScattIntervalleyTot(:,1,2),'Linewidth', 3,'Color', [0.75 0.75 0])
+plot(E,ScattIntervalleyTot(:,1,3),'Linewidth', 3,'Color', [0 0.75 0])
+plot(E,ScattIntervalleyTot(:,1,4),'Linewidth', 3,'Color', [0 0.75 0.75])
+plot(E,ScattIntervalleyTot(:,1,5),'Linewidth', 3,'Color', [0 0 0.75])
+plot(E,ScattIntervalleyTot(:,2,1),'Linewidth', 3,'Color', [0.5 0 0])
+plot(E,ScattIntervalleyTot(:,2,2),'Linewidth', 3,'Color', [0.5 0.5 0])
+plot(E,ScattIntervalleyTot(:,2,3),'Linewidth', 3,'Color', [0 0.5 0])
+plot(E,ScattIntervalleyTot(:,2,4),'Linewidth', 3,'Color', [0 0.5 0.5])
+plot(E,ScattIntervalleyTot(:,2,5),'Linewidth', 3,'Color', [0 0 0.5])
+title('Intervalley Scattering (Total)')
+legend('\Gamma L','\Gamma X','L L','L X','X X', ...
+       'L \Gamma','X \Gamma','L L','X L','X X')
+xlabel('E (eV)')
+ylabel('\Gamma (s^{-1})')
+hold off
+
+figure(5)
+hold on
+plot(E,ScattPolarOpAbs,'Linewidth', 3)
+plot(E,ScattPolarOpEmi,'Linewidth', 3)
+plot(E,ScattPolarOpTot,'Linewidth', 3)
+title('Polar Optical Phonon Scattering')
+legend('Abs','Emi','Tot')
+xlabel('E (eV)')
+ylabel('\Gamma (s^-^1)')
+hold off
+
+figure(6)
+hold on
+plot(E,ScattIntervalleyTot(:,1,1),'Linewidth', 3,'Color', [0.75 0 0])
+plot(E,ScattIntervalleyTot(:,2,1),'Linewidth', 3,'Color', [0 0.75 0])
+title('Intervalley Scattering (Total)')
+legend('\Gamma L', 'L \Gamma')
+xlabel('E (eV)')
+ylabel('\Gamma (s^{-1})')
+hold off
+
+figure(7)
+hold on
+plot(E,ScattIntervalleyTot(:,1,2),'Linewidth', 3,'Color', [0.75 0 0])
+plot(E,ScattIntervalleyTot(:,2,2),'Linewidth', 3,'Color', [0 0.75 0])
+title('Intervalley Scattering (Total)')
+legend('\Gamma X', 'X \Gamma')
+xlabel('E (eV)')
+ylabel('\Gamma (s^{-1})')
+hold off
+
+figure(8)
+hold on
+plot(E,ScattIntervalleyTot(:,1,3),'Linewidth', 3,'Color', [0.75 0 0])
+plot(E,ScattIntervalleyTot(:,2,3),'Linewidth', 3,'Color', [0 0.75 0])
+title('Intervalley Scattering (Total)')
+legend('L L', 'L L')
+xlabel('E (eV)')
+ylabel('\Gamma (s^{-1})')
+hold off
+
+figure(9)
+hold on
+plot(E,ScattIntervalleyTot(:,1,4),'Linewidth', 3,'Color', [0.75 0 0])
+plot(E,ScattIntervalleyTot(:,2,4),'Linewidth', 3,'Color', [0 0.75 0])
+title('Intervalley Scattering (Total)')
+legend('L X', 'X L')
+xlabel('E (eV)')
+ylabel('\Gamma (s^{-1})')
+hold off
+
+figure(10)
+hold on
+plot(E,ScattIntervalleyTot(:,1,5),'Linewidth', 3,'Color', [0.75 0 0])
+plot(E,ScattIntervalleyTot(:,2,5),'Linewidth', 3,'Color', [0 0.75 0])
+title('Intervalley Scattering (Total)')
+legend('X X', 'X X')
+xlabel('E (eV)')
+ylabel('\Gamma (s^{-1})')
+hold off
+
+figure(11)
+hold on
+plot(E,ScattIonImpurity(:,1),'Linewidth', 3)
+plot(E,ScattIonImpurity(:,2),'Linewidth', 3)
+title('Ionized Impurity Scattering')
+legend('N_I=10^{17} cm^{-3}','N_I=10^{19} cm^{-3}')
+xlabel('E (eV)')
+ylabel('\Gamma (s^-^1)')
+hold off
+
+figure(12)
+hold on
+plot(E,ScattIonImpurity(:,1),'Linewidth', 3)
+plot(E,ScattIonImpurity(:,2),'Linewidth', 3)
+title('Ionized Impurity Scattering')
+legend('N_I=10^{17} cm^{-3}','N_I=10^{19} cm^{-3}')
+xlabel('E (eV)')
+ylabel('\Gamma (s^-^1)')
+hold off
+
+figure(13)
+semilogy(E,GammaMIon(:,1),'Linewidth', 3)
+hold on
+semilogy(E,GammaMIon(:,2),'Linewidth', 3)
+title('Ion Impurity Scattering Relaxation Rate')
+legend('\Gamma_{Tot}=\Gamma_M N_I=10^{17} cm^{-3}','\Gamma_{Tot}=\Gamma_M N_I=10^{19} cm^{-3}')
+xlabel('E (eV)')
+ylabel('\Gamma (s^-^1)')
+hold off
+
+figure(14)
+hold on
+semilogy(E,GammaMPop,'Linewidth', 3)
+semilogy(E,GammaEPop,'Linewidth', 3)
+title('Polar Optical Phonon Relaxation Rate')
+legend('\Gamma_M','\Gamma_E','\Gamma_{Tot}')
+xlabel('E (eV)')
+ylabel('\Gamma (s^-^1)')
+hold off
+
+##### SOURCE END #####
+--></body></html>
