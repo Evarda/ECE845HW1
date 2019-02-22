@@ -1,0 +1,345 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>GaAsMobility</title><meta name="generator" content="MATLAB 9.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-02-20"><meta name="DC.source" content="GaAsMobility.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput">clc;
+clear <span class="string">variables</span>;
+close <span class="string">all</span>;
+
+<span class="comment">% Constants</span>
+hbar=6.582119*10^-16; <span class="comment">%[eV*s]</span>
+hbarJ=1.0545718*10^-34; <span class="comment">%[J*s]</span>
+kb=8.6173303*10^-5; <span class="comment">%[eV/K]</span>
+kbJ=1.38064852*10^-23; <span class="comment">%[J/K]</span>
+T=300; <span class="comment">%[K]</span>
+ep0=8.854187817*10^-12; <span class="comment">%[F/m]</span>
+e=1.6021766208*10^-19; <span class="comment">%[C]</span>
+m0=9.10938356*10^-31; <span class="comment">%[kg]</span>
+
+Ec=0;
+
+<span class="comment">% GaAs</span>
+effm = 0.067*m0; <span class="comment">%[kg] for gamma, L, X respectively</span>
+rho = 5.36/1000*(100^3); <span class="comment">%[kg/m^3]</span>
+vs = 5.24*10^5/100; <span class="comment">%[m/s]</span>
+epr0 = 12.90;
+eprInf = 10.92;
+
+nE=50;
+E=linspace(0.000001,2,nE);
+
+<span class="comment">% Acoustic Phonon Scattering</span>
+Dac = 7.01; <span class="comment">%[eV] for gamma, L, X respectively</span>
+
+<span class="comment">% Polar Optical Phonon Scattering</span>
+E0 = 0.03536; <span class="comment">%[eV]</span>
+w0 = E0/hbar; <span class="comment">% [1/s]</span>
+N0=(exp(E0/(kb*T))-1)^(-1);
+
+<span class="comment">% Ionized Impurity Scattering</span>
+dNI = 100;
+NI = 1e23; <span class="comment">% [1/m^3]</span>
+Z = 1;
+
+GammaMAcoustic(1:nE)=0;
+GammaMIonImp(1:nE,1:length(NI))=0;
+GammaMPop(1:nE)=0;
+GammaTot(1:nE,1:length(NI))=0;
+
+k(1:nE)=0;
+Energy=linspace(0.0001,2,nE);
+
+<span class="keyword">for</span> i=1:nE
+
+    k(i) = sqrt(2*effm*E(i)/(hbar*hbarJ));
+
+<span class="comment">% Density of States</span>
+g3dAcoustic = sqrt(2)/(pi^2*hbar^3)*effm^(3/2)*sqrt(E(i)-Ec);
+
+<span class="comment">% Acoustic Phonon Scattering</span>
+GammaMAcoustic(i) = 2*pi/(hbarJ*hbar)^(1/2)*Dac^2*kb*T/(2*rho*vs^2)*g3dAcoustic;
+
+<span class="comment">% Polar Optical Phonon Scattering</span>
+GammaMPop(i)=(e^2*w0*(epr0/eprInf-1))/(4*pi*epr0*ep0*sqrt(hbarJ/hbar)*hbarJ*sqrt(2*E(i)/effm(1)))* <span class="keyword">...</span>
+    (N0*sqrt(1+E0/E(i))+(N0+1)*sqrt(1-E0/E(i))-E0*N0/E(i)*asinh(sqrt(E(i)/E0))+E0*(N0+1)/E(i)*asinh(sqrt(E(i)/E0-1)));
+
+GammaMPop=real(GammaMPop);
+
+<span class="comment">% Ionized Impurity Scattering</span>
+Ld=sqrt(ep0*eprInf*kbJ*T/(e^2*NI)); <span class="comment">%[m]</span>
+gamma=sqrt(8*effm*E(i)*Ld^2/(hbar*hbarJ));
+GammaMIonImp(i)=(hbar/hbarJ)^(3/2)*(NI*e^4)/(16*sqrt(2*effm(1))*pi*eprInf^2*ep0^2)*(log(1+gamma^2)-gamma^2/(1+gamma^2))*E(i)^(-3/2);
+
+GammaTot(i) = GammaMAcoustic(i)+GammaMIonImp(i)+GammaMPop(i);
+
+<span class="keyword">end</span>
+
+<span class="comment">% Numerical Integration</span>
+
+ExpTauEAcoustic = 0;
+ExpEAcoustic = 0;
+
+ExpTauEIonImp = 0;
+ExpEIonImp = 0;
+
+ExpTauEPop = 0;
+ExpEPop = 0;
+
+ExpTauETot = 0;
+ExpETot = 0;
+
+<span class="keyword">for</span> i=1:nE
+    f0=exp(-Energy(i)/(kb*T));
+    g3d = sqrt(Energy(i));
+
+    ExpTauEAcoustic = ExpTauEAcoustic + 1/GammaMAcoustic(i)*Energy(i)*f0*g3d;
+    ExpEAcoustic    = ExpEAcoustic + Energy(i)*f0*g3d;
+
+    ExpTauEIonImp = ExpTauEIonImp + 1/GammaMIonImp(i)*Energy(i)*f0*g3d;
+    ExpEIonImp    = ExpEIonImp + Energy(i)*f0*g3d;
+
+    ExpTauEPop = ExpTauEPop + 1/GammaMPop(i)*Energy(i)*f0*g3d;
+    ExpEPop    = ExpEPop + Energy(i)*f0*g3d;
+
+    ExpTauETot = ExpTauETot + 1/GammaTot(i)*Energy(i)*f0*g3d;
+    ExpETot    = ExpETot + Energy(i)*f0*g3d;
+
+<span class="keyword">end</span>
+
+<span class="comment">% Find Tau</span>
+AvgTauAcoustic  = ExpTauEAcoustic/ExpEAcoustic;
+AvgTauIonImp  = ExpTauEIonImp/ExpEIonImp;
+AvgTauPop  = ExpTauEPop/ExpEPop;
+AvgTauTot  = ExpTauETot/ExpETot;
+
+<span class="comment">% Calculate Mobilities</span>
+MobilityAcoustic = 100^2*e*AvgTauAcoustic/effm; <span class="comment">% cm^2/(Vs)</span>
+MobilityIonImp = 100^2*e*AvgTauIonImp/effm; <span class="comment">% cm^2/(Vs)</span>
+MobilityPop = 100^2*e*AvgTauPop/effm; <span class="comment">% cm^2/(Vs)</span>
+
+<span class="comment">% Calculate Total Mobility</span>
+MobilityTot = 100^2*e*AvgTauTot/effm; <span class="comment">% cm^2/(Vs)</span>
+
+<span class="comment">% Matthiessen's Rule</span>
+Mobility = (1/MobilityAcoustic + 1/MobilityIonImp + 1/MobilityPop).^(-1); <span class="comment">% cm^2/(Vs)</span>
+
+disp([<span class="string">'The acoustic mobility is '</span> num2str(MobilityAcoustic)])
+disp([<span class="string">'The ionized impurity mobility is '</span> num2str(MobilityIonImp)])
+disp([<span class="string">'The POP mobility is '</span> num2str(MobilityPop)])
+disp([<span class="string">'The mobility from Matthiessens Rule is '</span> num2str(Mobility)])
+disp([<span class="string">'The mobility from total momentum relaxation rate is '</span> num2str(MobilityTot)])
+
+<span class="comment">% Conductivities</span>
+conductivity = NI*e*Mobility;
+conductivityTot = NI*e*MobilityTot;
+
+disp([<span class="string">'Conductivity is '</span> num2str(conductivity)])
+disp([<span class="string">'Conductivity is '</span> num2str(conductivityTot)])
+</pre><pre class="codeoutput">The acoustic mobility is 149397.7887
+The ionized impurity mobility is 24054.4073
+The POP mobility is 6423.4541
+The mobility from Matthiessens Rule is 4903.2721
+The mobility from total momentum relaxation rate is 4582.3672
+Conductivity is 78559079.4149
+Conductivity is 73417615.1573
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+clc;
+clear variables;
+close all;
+
+% Constants
+hbar=6.582119*10^-16; %[eV*s]
+hbarJ=1.0545718*10^-34; %[J*s]
+kb=8.6173303*10^-5; %[eV/K]
+kbJ=1.38064852*10^-23; %[J/K]
+T=300; %[K]
+ep0=8.854187817*10^-12; %[F/m]
+e=1.6021766208*10^-19; %[C]
+m0=9.10938356*10^-31; %[kg]
+
+Ec=0;
+
+% GaAs
+effm = 0.067*m0; %[kg] for gamma, L, X respectively
+rho = 5.36/1000*(100^3); %[kg/m^3]
+vs = 5.24*10^5/100; %[m/s]
+epr0 = 12.90;
+eprInf = 10.92;
+
+nE=50;
+E=linspace(0.000001,2,nE);
+
+% Acoustic Phonon Scattering
+Dac = 7.01; %[eV] for gamma, L, X respectively
+
+% Polar Optical Phonon Scattering
+E0 = 0.03536; %[eV]
+w0 = E0/hbar; % [1/s]
+N0=(exp(E0/(kb*T))-1)^(-1);
+
+% Ionized Impurity Scattering
+dNI = 100;
+NI = 1e23; % [1/m^3]
+Z = 1;
+
+GammaMAcoustic(1:nE)=0;
+GammaMIonImp(1:nE,1:length(NI))=0;
+GammaMPop(1:nE)=0;
+GammaTot(1:nE,1:length(NI))=0;
+
+k(1:nE)=0;
+Energy=linspace(0.0001,2,nE);
+
+for i=1:nE
+    
+    k(i) = sqrt(2*effm*E(i)/(hbar*hbarJ));
+
+% Density of States
+g3dAcoustic = sqrt(2)/(pi^2*hbar^3)*effm^(3/2)*sqrt(E(i)-Ec);
+
+% Acoustic Phonon Scattering
+GammaMAcoustic(i) = 2*pi/(hbarJ*hbar)^(1/2)*Dac^2*kb*T/(2*rho*vs^2)*g3dAcoustic;
+
+% Polar Optical Phonon Scattering
+GammaMPop(i)=(e^2*w0*(epr0/eprInf-1))/(4*pi*epr0*ep0*sqrt(hbarJ/hbar)*hbarJ*sqrt(2*E(i)/effm(1)))* ...
+    (N0*sqrt(1+E0/E(i))+(N0+1)*sqrt(1-E0/E(i))-E0*N0/E(i)*asinh(sqrt(E(i)/E0))+E0*(N0+1)/E(i)*asinh(sqrt(E(i)/E0-1)));
+
+GammaMPop=real(GammaMPop);
+    
+% Ionized Impurity Scattering
+Ld=sqrt(ep0*eprInf*kbJ*T/(e^2*NI)); %[m]
+gamma=sqrt(8*effm*E(i)*Ld^2/(hbar*hbarJ));
+GammaMIonImp(i)=(hbar/hbarJ)^(3/2)*(NI*e^4)/(16*sqrt(2*effm(1))*pi*eprInf^2*ep0^2)*(log(1+gamma^2)-gamma^2/(1+gamma^2))*E(i)^(-3/2);
+
+GammaTot(i) = GammaMAcoustic(i)+GammaMIonImp(i)+GammaMPop(i);
+
+end
+    
+% Numerical Integration
+
+ExpTauEAcoustic = 0;
+ExpEAcoustic = 0;   
+
+ExpTauEIonImp = 0;
+ExpEIonImp = 0; 
+
+ExpTauEPop = 0;
+ExpEPop = 0; 
+
+ExpTauETot = 0;
+ExpETot = 0;
+
+for i=1:nE
+    f0=exp(-Energy(i)/(kb*T));
+    g3d = sqrt(Energy(i));
+    
+    ExpTauEAcoustic = ExpTauEAcoustic + 1/GammaMAcoustic(i)*Energy(i)*f0*g3d;
+    ExpEAcoustic    = ExpEAcoustic + Energy(i)*f0*g3d;
+    
+    ExpTauEIonImp = ExpTauEIonImp + 1/GammaMIonImp(i)*Energy(i)*f0*g3d;
+    ExpEIonImp    = ExpEIonImp + Energy(i)*f0*g3d;
+    
+    ExpTauEPop = ExpTauEPop + 1/GammaMPop(i)*Energy(i)*f0*g3d;
+    ExpEPop    = ExpEPop + Energy(i)*f0*g3d;
+    
+    ExpTauETot = ExpTauETot + 1/GammaTot(i)*Energy(i)*f0*g3d;
+    ExpETot    = ExpETot + Energy(i)*f0*g3d;
+    
+end
+
+% Find Tau
+AvgTauAcoustic  = ExpTauEAcoustic/ExpEAcoustic;
+AvgTauIonImp  = ExpTauEIonImp/ExpEIonImp;
+AvgTauPop  = ExpTauEPop/ExpEPop;
+AvgTauTot  = ExpTauETot/ExpETot;
+
+% Calculate Mobilities
+MobilityAcoustic = 100^2*e*AvgTauAcoustic/effm; % cm^2/(Vs)
+MobilityIonImp = 100^2*e*AvgTauIonImp/effm; % cm^2/(Vs)
+MobilityPop = 100^2*e*AvgTauPop/effm; % cm^2/(Vs)
+
+% Calculate Total Mobility
+MobilityTot = 100^2*e*AvgTauTot/effm; % cm^2/(Vs)
+
+% Matthiessen's Rule
+Mobility = (1/MobilityAcoustic + 1/MobilityIonImp + 1/MobilityPop).^(-1); % cm^2/(Vs)
+
+disp(['The acoustic mobility is ' num2str(MobilityAcoustic)])
+disp(['The ionized impurity mobility is ' num2str(MobilityIonImp)])
+disp(['The POP mobility is ' num2str(MobilityPop)])
+disp(['The mobility from Matthiessens Rule is ' num2str(Mobility)])
+disp(['The mobility from total momentum relaxation rate is ' num2str(MobilityTot)])
+
+% Conductivities
+conductivity = NI*e*Mobility;
+conductivityTot = NI*e*MobilityTot;
+
+disp(['Conductivity is ' num2str(conductivity)])
+disp(['Conductivity is ' num2str(conductivityTot)])
+##### SOURCE END #####
+--></body></html>
